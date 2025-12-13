@@ -2,7 +2,7 @@
 
 **工程化的 React 状态管理 · 基于 Immer 的强大能力**
 
-[![npm version](https://img.shields.io/npm/v/@domd/zenith.svg)](https://www.npmjs.com/package/@domd/zenith)
+[![npm version](https://img.shields.io/npm/v/@do-md/zenith.svg)](https://www.npmjs.com/package/@do-md/zenith)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
 [![Powered by Immer](https://img.shields.io/badge/Powered%20by-Immer-00D8FF)](https://immerjs.github.io/immer/)
@@ -451,9 +451,9 @@ class CounterStore extends ZenithStore<{ count: number }> {
 ### 安装
 
 ```bash
-npm install @domd/zenith immer
+npm install @do-md/zenith immer
 # or
-pnpm add @domd/zenith immer
+pnpm add @do-md/zenith immer
 ```
 
 > **注意**：Immer 是 peer dependency，需要显式安装
@@ -473,7 +473,7 @@ pnpm add @domd/zenith immer
 ### 完整示例
 
 ```typescript
-import { ZenithStore, memo, useContextGetter } from '@domd/zenith'
+import { ZenithStore, memo, useContextGetter } from '@do-md/zenith'
 import { createContext, useState, useContext } from 'react'
 
 // 1. 定义 State

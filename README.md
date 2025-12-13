@@ -2,7 +2,7 @@
 
 **Engineering-Grade React State Management · Powered by Immer**
 
-[![npm version](https://img.shields.io/npm/v/@domd/zenith.svg)](https://www.npmjs.com/package/@domd/zenith)
+[![npm version](https://img.shields.io/npm/v/@do-md/zenith.svg)](https://www.npmjs.com/package/@do-md/zenith)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
 [![Powered by Immer](https://img.shields.io/badge/Powered%20by-Immer-00D8FF)](https://immerjs.github.io/immer/)
@@ -451,9 +451,9 @@ class CounterStore extends ZenithStore<{ count: number }> {
 ### Installation
 
 ```bash
-npm install @domd/zenith immer
+npm install @do-md/zenith immer
 # or
-pnpm add @domd/zenith immer
+pnpm add @do-md/zenith immer
 ```
 
 > **Note**: Immer is a peer dependency and must be explicitly installed
@@ -473,7 +473,7 @@ pnpm add @domd/zenith immer
 ### Complete Example
 
 ```typescript
-import { ZenithStore, memo, useContextGetter } from '@domd/zenith'
+import { ZenithStore, memo, useContextGetter } from '@do-md/zenith'
 import { createContext, useState, useContext } from 'react'
 
 // 1. Define State

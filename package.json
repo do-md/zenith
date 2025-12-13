@@ -1,5 +1,5 @@
 {
-  "name": "@domd/zenith",
+  "name": "@do-md/zenith",
   "version": "1.0.0",
   "description": "Engineering-grade React state management powered by Immer",
   "type": "module",

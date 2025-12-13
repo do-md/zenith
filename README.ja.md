@@ -2,7 +2,7 @@
 
 **エンジニアリンググレードの React 状態管理 · Immer によって強化**
 
-[![npm version](https://img.shields.io/npm/v/@domd/zenith.svg)](https://www.npmjs.com/package/@domd/zenith)
+[![npm version](https://img.shields.io/npm/v/@do-md/zenith.svg)](https://www.npmjs.com/package/@do-md/zenith)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
 [![Powered by Immer](https://img.shields.io/badge/Powered%20by-Immer-00D8FF)](https://immerjs.github.io/immer/)
@@ -451,9 +451,9 @@ class CounterStore extends ZenithStore<{ count: number }> {
 ### インストール
 
 ```bash
-npm install @domd/zenith immer
+npm install @do-md/zenith immer
 # または
-pnpm add @domd/zenith immer
+pnpm add @do-md/zenith immer
 ```
 
 > **注意**：Immer は peer dependency であり、明示的にインストールする必要があります
@@ -473,7 +473,7 @@ pnpm add @domd/zenith immer
 ### 完全な例
 
 ```typescript
-import { ZenithStore, memo, useContextGetter } from '@domd/zenith'
+import { ZenithStore, memo, useContextGetter } from '@do-md/zenith'
 import { createContext, useState, useContext } from 'react'
 
 // 1. State を定義
