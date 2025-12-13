@@ -1,6 +1,6 @@
 {
   "name": "@domd/zenith",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Engineering-grade React state management powered by Immer",
   "type": "module",
   "main": "./dist/index.cjs",
