@@ -1,0 +1,73 @@
+{
+  "name": "@domd/zenith",
+  "version": "0.1.0",
+  "description": "Engineering-grade React state management powered by Immer",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./src/*": "./src/*"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "dev": "vite build --watch"
+  },
+  "keywords": [
+    "react",
+    "state",
+    "state-management",
+    "store",
+    "immer",
+    "immutable",
+    "typescript",
+    "hooks",
+    "undo",
+    "redo",
+    "patches",
+    "collaborative"
+  ],
+  "author": "Jayden Wang",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/do-md/zenith.git"
+  },
+  "homepage": "https://github.com/do-md/zenith#readme",
+  "bugs": {
+    "url": "https://github.com/do-md/zenith/issues"
+  },
+  "peerDependencies": {
+    "immer": "^10.2.0",
+    "react": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.3",
+    "vite-plugin-dts": "^4.3.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.mjs",
+        "require": "./dist/index.cjs"
+      }
+    },
+    "files": [
+      "dist"
+    ]
+  }
+}
