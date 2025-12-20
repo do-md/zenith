@@ -75,7 +75,7 @@ class TodoStore extends ZenithStore<State> {
 
 ### 2. Use in Components
 
-Use Hooks just like Zustand, but enjoy complete TypeScript type inference.
+Use Hooks just like Zustand, and enjoy complete TypeScript type inference.
 
 ```tsx
 const { StoreProvider, useStore, useStoreApi } = createReactStore(TodoStore);
