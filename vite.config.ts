@@ -5,16 +5,21 @@ import dts from 'vite-plugin-dts';
 export default defineConfig({
   plugins: [
     dts({
-      include: ['src'],
-      rollupTypes: true,
+      include: ['src/**/*'],
+      exclude: ['src/**/*.test.ts'],
+      entryRoot: 'src',
     }),
   ],
   build: {
+    sourcemap: true,
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: {
+        index: resolve(__dirname, 'src/index.ts'),
+        'middleware/index': resolve(__dirname, 'src/middleware/index.ts'),
+      },
       name: 'ReactDomdStore',
       formats: ['es', 'cjs'],
-      fileName: (format) => `index.${format === 'es' ? 'mjs' : 'cjs'}`,
+      fileName: (format, entryName) => `${entryName}.${format === 'es' ? 'mjs' : 'cjs'}`,
     },
     rollupOptions: {
       external: ['react', 'immer'],

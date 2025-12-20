@@ -12,11 +12,14 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
     },
-    "./src/*": "./src/*"
+    "./middleware": {
+      "types": "./dist/middleware/index.d.ts",
+      "import": "./dist/middleware/index.mjs",
+      "require": "./dist/middleware/index.cjs"
+    }
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
     "build": "vite build",
@@ -64,6 +67,11 @@
         "types": "./dist/index.d.ts",
         "import": "./dist/index.mjs",
         "require": "./dist/index.cjs"
+      },
+      "./middleware": {
+        "types": "./dist/middleware/index.d.ts",
+        "import": "./dist/middleware/index.mjs",
+        "require": "./dist/middleware/index.cjs"
       }
     },
     "files": [
