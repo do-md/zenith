@@ -1,244 +1,200 @@
 # Zenith
 
-**工程化的 React 状态管理 · 基于 Immer 的强大能力**
+**工程化的 React 状态管理 · 融合 Zustand 的极简与 MobX 的组织力**
 
-[![npm version](https://img.shields.io/npm/v/@do-md/zenith.svg)](https://www.npmjs.com/package/@do-md/zenith)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
-[![Powered by Immer](https://img.shields.io/badge/Powered%20by-Immer-00D8FF)](https://immerjs.github.io/immer/)
+[![npm version](https://img.shields.io/npm/v/@do-md/zenith.svg?style=flat-square)](https://www.npmjs.com/package/@do-md/zenith)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=flat-square)](https://www.typescriptlang.org/)
+[![Powered by Immer](https://img.shields.io/badge/Powered%20by-Immer-00D8FF?style=flat-square)](https://immerjs.github.io/immer/)
+[![Gzipped Size](https://img.shields.io/badge/minzipped-3.5kb-success?style=flat-square)](https://bundlephobia.com/package/@do-md/zenith)
 
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md)
 
 ---
 
-## 📑 快速导航
+## ⚡️ 简介
 
-**[🚀 快速开始](#-快速开始)** · **[📊 全面对比](#-全面对比)** · **[🎯 真实案例](#-真实案例domd)**
+Zenith 是一个 **基于不可变数据（Immutable Data）的自动化响应模型**。
+
+它旨在解决 React 状态管理中的一个经典矛盾：如何在享受 **MobX 自动派生能力**的同时，保留 **Redux/Immer 快照的可预测性**。
+
+- 🛡️ **Immer 的不可变性** — 符合 React 直觉，数据结构共享，高性能快照。
+- ⚡️ **MobX 的响应力** — 响应式计算属性、自动依赖追踪，多层级链式派生，拒绝无效渲染。
+- 🎯 **Zustand 的极简** — 零模版代码，直观的 API。
+- 🏢 **企业级工程化** — 强制封装业务逻辑，拒绝 UI 层随意修改状态。
 
 ---
 
-## ✨ 为什么选择 Zenith？
+## 🚀 30 秒上手
 
-**Simple as Zustand, Powerful as MobX**
+### 1. 定义 Store
 
-用 Zustand 的简洁，获得 MobX 的响应能力，加上独有的工程化特性
-
-> **Zenith = Zustand 的易用性 + MobX 的计算属性 + 超越两者的工程化**
-
-- 🎯 **Zustand 的 API** — 轻量、直观、零配置，5 分钟上手
-- 🧲 **MobX 的能力** — 计算属性、链式派生、稳定引用，杜绝无效渲染
-- 🔧 **独有的工程化** — Middleware 架构、Immer Patches、DevTools、异步查询
-- 🏢 **适合团队** — 强制封装、TypeScript 优先、业务逻辑无法被绕过
-
-## 🎯 核心能力
-
-### 1️⃣ **计算属性 + 链式派生：响应式系统的核心**
-
-> 计算属性和链式派生让你的代码符合"单一数据流"原则：**写入侧只需修改原子状态，读取侧自动获取最新派生状态**
+使用 `class` 组织逻辑，用 `@memo` 定义高性能计算属性。
 
 ```typescript
 import { ZenithStore, memo } from "@do-md/zenith";
-
-interface State {
-  todos: Todo[];
-  filter: "all" | "active" | "completed";
-}
 
 class TodoStore extends ZenithStore<State> {
   constructor() {
     super({ todos: [], filter: "all" });
   }
 
-  // 📍 计算属性：自动缓存 + 稳定引用
-  @memo((self) => [self.state.todos, self.state.filter])
+  // ⚡️ 计算属性：依赖自动追踪，结果自动缓存
+  // 只有当 todos 或 filter 变化时，filteredTodos 才会重新计算
+  @memo((s) => [s.state.todos, s.state.filter])
   get filteredTodos() {
     const { todos, filter } = this.state;
     if (filter === "all") return todos;
-    return todos.filter((t) =>
-      filter === "active" ? !t.completed : t.completed
-    );
+    return todos.filter((t) => t.completed === (filter === "completed"));
   }
 
   // 🔗 链式派生：基于上一个计算属性
-  @memo((self) => [self.filteredTodos])
+  @memo((s) => [s.filteredTodos])
   get stats() {
     return {
       total: this.filteredTodos.length,
-      completed: this.filteredTodos.filter((t) => t.completed).length,
       active: this.filteredTodos.filter((t) => !t.completed).length,
     };
   }
 
-  // ✅ 业务方法：只需修改原子状态
-  setFilter(filter: State["filter"]) {
-    this.produce((s) => {
-      s.filter = filter;
+  // 🔧 业务 Action：直接修改 Draft，Immer 负责生成不可变数据
+  addTodo(text: string) {
+    this.produce((draft) => {
+      draft.todos.push({ id: Date.now(), text, completed: false });
     });
-    // filteredTodos 和 stats 自动响应更新
   }
 
-  toggleTodo(id: string) {
-    this.produce((s) => {
-      const todo = s.todos.find((t) => t.id === id);
+  toggle(id: number) {
+    this.produce((draft) => {
+      const todo = draft.todos.find((t) => t.id === id);
       if (todo) todo.completed = !todo.completed;
     });
   }
 }
 ```
 
-**三个组件展示响应式更新：**
+### 2. 在组件中使用
 
-```typescript
-// 组件 1：显示过滤后的列表
-function TodoList() {
-  const todos = useStore(s => s.filteredTodos)
-  // ✅ 只在 todos 或 filter 变化时重渲染
-  return <div>{todos.map(t => <TodoItem key={t.id} todo={t} />)}</div>
+像 Zustand 一样使用 Hooks，具备完整的 TypeScript 类型推导。
+
+```tsx
+const { StoreProvider, useStore, useStoreApi } = createReactStore(TodoStore);
+
+function TodoApp() {
+  return (
+    <StoreProvider>
+      <TodoStats />
+      <TodoList />
+    </StoreProvider>
+  );
 }
 
-// 组件 2：显示统计信息
 function TodoStats() {
-  const stats = useStore(s => s.stats)
-  // ✅ 只在 filteredTodos 变化时重渲染
-  return <div>总计: {stats.total} | 完成: {stats.completed}</div>
-}
-
-// 组件 3：切换过滤器
-function TodoFilter() {
-  const filter = useStore(s => s.state.filter)
-  const store = useStoreApi()
-  // ✅ 只在 filter 变化时重渲染
+  // ✅ 链式派生：stats 依赖 filteredTodos，filteredTodos 依赖 todos
+  // 当切换 filter 时，filteredTodos 变 -> stats 变 -> 组件重渲染
+  const stats = useStore((s) => s.stats);
   return (
     <div>
-      <button onClick={() => store.setFilter('all')}>全部</button>
-      <button onClick={() => store.setFilter('active')}>进行中</button>
+      总计: {stats.total} | 待办: {stats.active}
     </div>
-  )
-}
-```
-
-**为什么链式派生如此重要？**
-
-计算属性和链式派生让响应式系统真正强大：
-
-1. **业务逻辑简单**：`setFilter('active')` 一行代码，所有派生状态自动更新
-2. **性能自动优化**：框架保证只重算受影响的链路，避免无效计算
-3. **引用稳定**：依赖不变时返回相同引用，避免组件无效重渲染
-
-**更新传播链路：**
-
-```
-场景 1：切换过滤器
-setFilter('active')
-  ↓
-state.filter 变化
-  ↓
-filteredTodos 重新计算（依赖 todos + filter）
-  ↓
-stats 重新计算（依赖 filteredTodos）
-  ↓
-TodoList 和 TodoStats 重新渲染
-
-场景 2：切换待办状态
-toggleTodo(id)
-  ↓
-state.todos 变化
-  ↓
-filteredTodos 重新计算
-  ↓
-stats 重新计算
-  ↓
-TodoList 和 TodoStats 重新渲染
-```
-
-### 2️⃣ **强制封装 - 团队级工程化**
-
-```typescript
-class OrderStore extends ZenithStore<State> {
-  // ✅ 业务逻辑集中，编译器强制规范
-  submitOrder(items: Item[]) {
-    this.validateCart(items);
-    this.produceData((state) => {
-      state.orders.push({
-        id: nanoid(),
-        items,
-        status: "pending",
-        createdAt: Date.now(),
-      });
-      state.cart = [];
-    });
-    this.syncToServer();
-  }
-
-  private validateCart(items: Item[]) {
-    if (items.length === 0) throw new Error("购物车为空");
-    if (items.some((x) => x.stock < x.quantity)) throw new Error("库存不足");
-  }
-
-  private syncToServer() {
-    // 统一的副作用处理
-  }
+  );
 }
 
-// 组件中
-function CheckoutButton() {
-  const storeApi = useStoreApi();
-  // ✅ 只能通过 API
-  storeApi?.submitOrder(items);
+function TodoList() {
+  // ✅ Selector 模式：只在 filteredTodos 变化时渲染
+  const todos = useStore((s) => s.filteredTodos);
+  const store = useStoreApi();
 
-  // ❌ 无法绕过验证
-  // store.produceData(...)  // TypeScript 报错：produceData 是 protected
+  return (
+    <div>
+      {todos.map((todo) => (
+        <div key={todo.id} onClick={() => store.toggle(todo.id)}>
+          {todo.text}
+        </div>
+      ))}
+    </div>
+  );
 }
 ```
-
-**对比灵活方案的挑战**：
-
-```typescript
-// 灵活但容易出错的写法
-const set = useStore.setState;
-// 某个组件里
-set({ orders: [...orders, newOrder], cart: [] }); // 忘记验证！
-// 另一个组件里
-if (cart.length > 0) {
-  set({ orders: [...orders, newOrder] }); // 忘记清空购物车！
-}
-// 20 个地方，20 种写法，调试困难
-```
-
-## 📊 全面对比
-
-| 特性           | Zenith      | Zustand      | MobX        | Redux Toolkit |
-| -------------- | ----------- | ------------ | ----------- | ------------- |
-| **API 简洁性** | ⭐⭐⭐⭐⭐  | ⭐⭐⭐⭐⭐   | ⭐⭐⭐      | ⭐⭐⭐        |
-| **计算属性**   | ✅ @memo    | ❌           | ✅ computed | ⚠️ selector   |
-| **稳定引用**   | ✅ 自动     | ⚠️ 手动 memo | ✅ 自动     | ⚠️ reselect   |
-| **链式派生**   | ✅          | ❌           | ✅          | ⚠️ 复杂       |
-| **强制封装**   | ✅          | ❌           | ⚠️          | ✅            |
-| **Middleware** | ✅ 内置架构 | ✅           | ❌          | ✅            |
-| **撤销/重做**  | ✅ Patches  | ❌           | ❌          | ⚠️ 插件       |
-| **DevTools**   | ✅          | ⚠️ 第三方    | ✅          | ✅            |
-| **TypeScript** | ⭐⭐⭐⭐⭐  | ⭐⭐⭐⭐⭐   | ⭐⭐⭐⭐    | ⭐⭐⭐⭐⭐    |
-| **学习曲线**   | ⭐⭐⭐      | ⭐⭐         | ⭐⭐⭐⭐    | ⭐⭐⭐⭐      |
-| **包体积**     | 2KB 核心    | ~3KB         | ~16KB       | ~22KB         |
 
 ---
 
-## 🚀 快速开始
+## 核心特性深度解析
 
-### 安装
+### 1️⃣ 智能的计算属性 (`@memo`)
 
-```bash
-npm install @do-md/zenith immer
-# or
-pnpm add @do-md/zenith immer
+拒绝无效渲染。Zenith 的 `@memo` 类似于 MobX 的 `computed`，但完全基于不可变数据。
+
+- **链式派生**：计算属性可以依赖其他计算属性，构建高效的数据流图。
+- **精准更新**：如果计算结果的引用没有变化（Reference Equality），组件不会重渲染。
+- **显式依赖**：`@memo((s) => [deps])` 让你清楚地知道数据流向，避免 MobX 的"魔法"黑盒。
+
+### 2️⃣ 强制封装 (Force Encapsulation)
+
+在团队协作中，状态管理最怕"随意修改"。Zustand 允许在组件中随意 `setState`，导致业务逻辑分散。
+
+**Zenith 强制你把逻辑写在 Store 内部：**
+
+```typescript
+// ✅ Good: UI 只负责调用意图
+<button onClick={() => store.submitOrder(items)} />
+
+// ❌ Bad: UI 无法直接修改 State（没有 setState 方法暴露）
+// store.state.orders = ... // Error!
 ```
 
-> **注意**：Immer 是 peer dependency，需要显式安装
+这使得**重构变得极其简单**（Refactor-friendly），查找引用（Find Usages）永远准确。
 
-### 启用 TypeScript 装饰器
+### 3️⃣ 内置中间件架构
+
+核心仅 2KB，但功能无限扩展。
+
+- **📦 withHistory**：基于 Patches 的撤销/重做。内存占用比快照方案低 **100倍**，专为编辑器/画板设计。
+  - [📖 History 中间件文档](./docs/middleware-history.zh-CN.md)
+- **🛠️ DevTools**：零配置接入 Redux DevTools，支持时间旅行调试。
+  - [📖 DevTools 中间件文档](./docs/middleware-devtools.zh-CN.md)
+
+---
+
+## 📊 选型对比
+
+| 特性 | Zenith | Zustand | MobX | Redux Toolkit |
+| :--- | :--- | :--- | :--- | :--- |
+| **核心范式** | **Immutable Class** | Functional | Mutable Class | Functional |
+| **计算属性** | ✅ **@memo (链式)** | ❌ (需手动) | ✅ computed | ⚠️ selector |
+| **API 简洁性** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+| **类型安全** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **团队规范性** | ✅ **强制封装** | ❌ 弱约束 | ⚠️ 弱约束 | ✅ 强约束 |
+| **撤销/重做** | ✅ **Patches (极快)** | ❌ | ❌ | ⚠️ 较重 |
+| **包体积** | **~3.5KB** | ~1KB | ~16KB | ~20KB+ |
+
+---
+
+## 📖 更多文档
+
+- **[📚 完整 API 文档](./docs/api.zh-CN.md)**
+- **[Todo App 完整示例](./docs/todo-app.zh-CN.md)**
+
+---
+
+## 📦 安装
+
+Zenith 依赖 `immer` 来处理不可变数据。
+
+```bash
+# npm
+npm install @do-md/zenith immer
+
+# pnpm
+pnpm add @do-md/zenith immer
+
+# yarn
+yarn add @do-md/zenith immer
+```
+
+配置 `tsconfig.json` 以支持装饰器：
 
 ```json
-// tsconfig.json
 {
   "compilerOptions": {
     "experimentalDecorators": true,
@@ -247,61 +203,17 @@ pnpm add @do-md/zenith immer
 }
 ```
 
-## 🔌 Middleware 架构
+---
 
-Zenith 采用 Middleware 架构，核心轻量（2KB），功能按需加载：
+## 🎯 真实案例
 
-### 核心 Middleware
-
-#### 📦 withHistory - 撤销/重做
-
-> **Zenith 的核心能力**：虽从 Core 剥离，但这是最重要的特性之一
-
-基于 Immer Patches 实现，内存高效 100 倍：
-
-**特点：**
-
-- ✅ 内存占用是快照方案的 1%
-- ✅ 智能防抖合并
-- ✅ 精确粒度控制
-- ✅ 适用于编辑器、画板等场景
-
-**[📖 完整文档](./docs/middleware-history.zh-CN.md)**
-
-#### 🛠️ devtools - Redux DevTools 集成
-
-在开发环境中调试 Store：
-
-**特点：**
-
-- ✅ Action 追踪
-- ✅ 时间旅行
-- ✅ 状态导出/导入
-- ✅ 零配置
-
-**[📖 完整文档](./docs/middleware-devtools.zh-CN.md)**
-
-## 📖 文档与示例
-
-**[📚 完整 API 文档](./docs/api.zh-CN.md)** · **[Todo App 完整示例](./docs/todo-app.zh-CN.md)**
+**[domd](https://demo.domd.app/?src=https://github.com/do-md/zenith)** — 基于 Zenith 构建的所见即所得 Markdown 编辑器。
+- ⚡️ **性能**：处理 20,000+ 行文档丝滑流畅。
+- 🔙 **撤销**：基于 Zenith History 中间件的精确撤销重做。
+- 💾 **内存**：Immer Patches 极大降低了内存开销。
 
 ---
 
-## 🎯 真实案例：domd
-
-**[domd](https://demo.domd.app/?src=https://github.com/do-md/zenith)** — 基于 Zenith 构建的强大所见即所得 Markdown 编辑器
-
-- 📦 **20KB，完整能力** — 仅依赖 Immer + Zenith，具备完整的 Markdown 解析与编辑能力
-- 🚀 **20000+ 行丝滑编辑** — 无卡顿、无延迟，性能卓越
-- 💾 **极低内存占用** — 稳定引用 + Immer Patches 的完美实践
-- 🔜 **即将开源**
-
----
-
-## 📄 开源协议
+## 📄 License
 
 MIT © [Jayden Wang](https://github.com/do-md)
-
-## 💡 致谢
-
-Zenith 构建于 **[Immer](https://github.com/immerjs/immer)** 之上 — 这是 [Michel Weststrate](https://github.com/mweststrate) 创造的杰出库，让不可变状态更新变得自然而优雅。

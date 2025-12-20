@@ -1,244 +1,200 @@
 # Zenith
 
-**エンジニアリンググレードの React 状態管理 · Immer の強力な機能**
+**エンジニアリング指向のReact状態管理・ZustandのシンプルさとMobXの組織力を融合**
 
-[![npm version](https://img.shields.io/npm/v/@do-md/zenith.svg)](https://www.npmjs.com/package/@do-md/zenith)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://www.typescriptlang.org/)
-[![Powered by Immer](https://img.shields.io/badge/Powered%20by-Immer-00D8FF)](https://immerjs.github.io/immer/)
+[![npm version](https://img.shields.io/npm/v/@do-md/zenith.svg?style=flat-square)](https://www.npmjs.com/package/@do-md/zenith)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=flat-square)](https://www.typescriptlang.org/)
+[![Powered by Immer](https://img.shields.io/badge/Powered%20by-Immer-00D8FF?style=flat-square)](https://immerjs.github.io/immer/)
+[![Gzipped Size](https://img.shields.io/badge/minzipped-3.5kb-success?style=flat-square)](https://bundlephobia.com/package/@do-md/zenith)
 
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md)
 
 ---
 
-## 📑 クイックナビゲーション
+## ⚡️ はじめに
 
-**[🚀 クイックスタート](#-クイックスタート)** · **[📊 包括的な比較](#-包括的な比較)** · **[🎯 実世界の例](#-実世界の例domd)**
+Zenithは、**不変データ（Immutable Data）に基づく自動化されたリアクティブモデル**です。
+
+これはReactの状態管理における古典的なジレンマを解決することを目指しています：**MobXのような自動派生機能**を享受しながら、**Redux/Immerのようなスナップショットの予測可能性**を維持することです。
+
+- 🛡️ **Immerの不変性** — Reactの直感に適合し、データ構造の共有により高性能なスナップショットを実現します。
+- 🎯 **Zustandのシンプルさ** — ボイラープレートなし、直感的なAPI。
+- ⚡️ **MobXのリアクティブ力** — リアクティブな計算プロパティ、依存関係の自動追跡、多層チェーン派生により、無駄な再レンダリングを防ぎます。
+- 🏢 **企業級のエンジニアリング** — ビジネスロジックのカプセル化を強制し、UI層からの無秩序な状態変更を防ぎます。
 
 ---
 
-## ✨ なぜ Zenith？
+## 🚀 30秒で始める
 
-**Zustand のようにシンプル、MobX のようにパワフル**
+### 1. Storeの定義
 
-Zustand のシンプルさ、MobX のリアクティブな能力、そして独自のエンジニアリング機能を実現
-
-> **Zenith = Zustand の使いやすさ + MobX の算出プロパティ + 両者を超えるエンジニアリング**
-
-- 🎯 **Zustand の API** — 軽量、直感的、ゼロ設定、5分で開始
-- 🧲 **MobX の能力** — 算出プロパティ、連鎖派生、安定した参照、無効なレンダリングを排除
-- 🔧 **独自のエンジニアリング** — Middleware アーキテクチャ、Immer Patches、DevTools、非同期クエリ
-- 🏢 **チーム向け** — 強制カプセル化、TypeScript 優先、ビジネスロジックのバイパス不可
-
-## 🎯 コア機能
-
-### 1️⃣ **算出プロパティ + 連鎖派生：リアクティブシステムのコア**
-
-> 算出プロパティと連鎖派生により、コードは「単方向データフロー」の原則に従います：**書き込み側はアトミックステートのみを変更し、読み取り側は自動的に最新の派生ステートを取得**
+`class`を使用してロジックを整理し、`@memo`で高性能な計算プロパティを定義します。
 
 ```typescript
 import { ZenithStore, memo } from "@do-md/zenith";
-
-interface State {
-  todos: Todo[];
-  filter: "all" | "active" | "completed";
-}
 
 class TodoStore extends ZenithStore<State> {
   constructor() {
     super({ todos: [], filter: "all" });
   }
 
-  // 📍 算出プロパティ：自動キャッシュ + 安定した参照
-  @memo((self) => [self.state.todos, self.state.filter])
+  // ⚡️ 計算プロパティ：依存関係を自動追跡し、結果を自動キャッシュ
+  // todos または filter が変化した時のみ再計算されます
+  @memo((s) => [s.state.todos, s.state.filter])
   get filteredTodos() {
     const { todos, filter } = this.state;
     if (filter === "all") return todos;
-    return todos.filter((t) =>
-      filter === "active" ? !t.completed : t.completed
-    );
+    return todos.filter((t) => t.completed === (filter === "completed"));
   }
 
-  // 🔗 連鎖派生：前の算出プロパティに基づく
-  @memo((self) => [self.filteredTodos])
+  // 🔗 チェーン派生：前の計算プロパティに基づく
+  @memo((s) => [s.filteredTodos])
   get stats() {
     return {
       total: this.filteredTodos.length,
-      completed: this.filteredTodos.filter((t) => t.completed).length,
       active: this.filteredTodos.filter((t) => !t.completed).length,
     };
   }
 
-  // ✅ ビジネスメソッド：アトミックステートのみを変更
-  setFilter(filter: State["filter"]) {
-    this.produce((s) => {
-      s.filter = filter;
+  // 🔧 ビジネスアクション：Draftを直接変更、Immerが不変性を担保します
+  addTodo(text: string) {
+    this.produce((draft) => {
+      draft.todos.push({ id: Date.now(), text, completed: false });
     });
-    // filteredTodos と stats が自動的に更新される
   }
 
-  toggleTodo(id: string) {
-    this.produce((s) => {
-      const todo = s.todos.find((t) => t.id === id);
+  toggle(id: number) {
+    this.produce((draft) => {
+      const todo = draft.todos.find((t) => t.id === id);
       if (todo) todo.completed = !todo.completed;
     });
   }
 }
 ```
 
-**3つのコンポーネントでリアクティブ更新を実演：**
+### 2. コンポーネントでの使用
 
-```typescript
-// コンポーネント 1：フィルター済みリストを表示
-function TodoList() {
-  const todos = useStore(s => s.filteredTodos)
-  // ✅ todos または filter が変更されたときのみ再レンダリング
-  return <div>{todos.map(t => <TodoItem key={t.id} todo={t} />)}</div>
+ZustandのようにHooksを使用しますが、TypeScriptの完全な型推論を享受できます。
+
+```tsx
+const { StoreProvider, useStore, useStoreApi } = createReactStore(TodoStore);
+
+function TodoApp() {
+  return (
+    <StoreProvider>
+      <TodoStats />
+      <TodoList />
+    </StoreProvider>
+  );
 }
 
-// コンポーネント 2：統計情報を表示
 function TodoStats() {
-  const stats = useStore(s => s.stats)
-  // ✅ filteredTodos が変更されたときのみ再レンダリング
-  return <div>合計: {stats.total} | 完了: {stats.completed}</div>
-}
-
-// コンポーネント 3：フィルターを切り替え
-function TodoFilter() {
-  const filter = useStore(s => s.state.filter)
-  const store = useStoreApi()
-  // ✅ filter が変更されたときのみ再レンダリング
+  // ✅ チェーン派生：statsはfilteredTodosに依存し、filteredTodosはtodosに依存
+  // filter変更 -> filteredTodos更新 -> stats更新 -> コンポーネント再レンダリング
+  const stats = useStore((s) => s.stats);
   return (
     <div>
-      <button onClick={() => store.setFilter('all')}>全て</button>
-      <button onClick={() => store.setFilter('active')}>進行中</button>
+      合計: {stats.total} | 未完了: {stats.active}
     </div>
-  )
-}
-```
-
-**なぜ連鎖派生はこれほど重要なのか？**
-
-算出プロパティと連鎖派生により、リアクティブシステムが真に強力になります：
-
-1. **シンプルなビジネスロジック**：`setFilter('active')` の1行で、すべての派生ステートが自動更新
-2. **自動パフォーマンス最適化**：フレームワークが影響を受けるパスのみを再計算し、無効な計算を回避
-3. **安定した参照**：依存関係が変更されていない場合、同じ参照を返し、コンポーネントの無効な再レンダリングを回避
-
-**更新伝播チェーン：**
-
-```
-シナリオ 1：フィルターを切り替え
-setFilter('active')
-  ↓
-state.filter が変更
-  ↓
-filteredTodos が再計算（todos + filter に依存）
-  ↓
-stats が再計算（filteredTodos に依存）
-  ↓
-TodoList と TodoStats が再レンダリング
-
-シナリオ 2：Todo のステータスを切り替え
-toggleTodo(id)
-  ↓
-state.todos が変更
-  ↓
-filteredTodos が再計算
-  ↓
-stats が再計算
-  ↓
-TodoList と TodoStats が再レンダリング
-```
-
-### 2️⃣ **強制カプセル化 - チームグレードエンジニアリング**
-
-```typescript
-class OrderStore extends ZenithStore<State> {
-  // ✅ ビジネスロジックの集中、コンパイラによる強制規範
-  submitOrder(items: Item[]) {
-    this.validateCart(items);
-    this.produceData((state) => {
-      state.orders.push({
-        id: nanoid(),
-        items,
-        status: "pending",
-        createdAt: Date.now(),
-      });
-      state.cart = [];
-    });
-    this.syncToServer();
-  }
-
-  private validateCart(items: Item[]) {
-    if (items.length === 0) throw new Error("カートが空です");
-    if (items.some((x) => x.stock < x.quantity)) throw new Error("在庫不足");
-  }
-
-  private syncToServer() {
-    // 統一された副作用処理
-  }
+  );
 }
 
-// コンポーネント内
-function CheckoutButton() {
-  const storeApi = useStoreApi();
-  // ✅ API 経由でのみ使用可能
-  storeApi?.submitOrder(items);
+function TodoList() {
+  // ✅ Selectorパターン：filteredTodosが変化した時のみレンダリング
+  const todos = useStore((s) => s.filteredTodos);
+  const store = useStoreApi();
 
-  // ❌ 検証をバイパスできない
-  // store.produceData(...)  // TypeScript エラー：produceData は protected
+  return (
+    <div>
+      {todos.map((todo) => (
+        <div key={todo.id} onClick={() => store.toggle(todo.id)}>
+          {todo.text}
+        </div>
+      ))}
+    </div>
+  );
 }
 ```
-
-**柔軟なアプローチの課題：**
-
-```typescript
-// 柔軟だがエラーが発生しやすい書き方
-const set = useStore.setState;
-// あるコンポーネントで
-set({ orders: [...orders, newOrder], cart: [] }); // 検証を忘れた！
-// 別のコンポーネントで
-if (cart.length > 0) {
-  set({ orders: [...orders, newOrder] }); // カートのクリアを忘れた！
-}
-// 20箇所で20通りの書き方、デバッグが困難
-```
-
-## 📊 包括的な比較
-
-| 機能              | Zenith          | Zustand         | MobX            | Redux Toolkit   |
-| ---------------- | --------------- | --------------- | --------------- | --------------- |
-| **API シンプルさ** | ⭐⭐⭐⭐⭐      | ⭐⭐⭐⭐⭐      | ⭐⭐⭐          | ⭐⭐⭐          |
-| **算出プロパティ**  | ✅ @memo        | ❌              | ✅ computed     | ⚠️ selector     |
-| **安定した参照**   | ✅ 自動          | ⚠️ 手動 memo    | ✅ 自動          | ⚠️ reselect     |
-| **連鎖派生**      | ✅              | ❌              | ✅              | ⚠️ 複雑          |
-| **強制カプセル化** | ✅              | ❌              | ⚠️              | ✅              |
-| **Middleware**   | ✅ 組み込み      | ✅              | ❌              | ✅              |
-| **アンドゥ/リドゥ** | ✅ Patches      | ❌              | ❌              | ⚠️ プラグイン    |
-| **DevTools**     | ✅              | ⚠️ サードパーティ | ✅              | ✅              |
-| **TypeScript**   | ⭐⭐⭐⭐⭐      | ⭐⭐⭐⭐⭐      | ⭐⭐⭐⭐        | ⭐⭐⭐⭐⭐      |
-| **学習曲線**      | ⭐⭐⭐          | ⭐⭐            | ⭐⭐⭐⭐        | ⭐⭐⭐⭐        |
-| **バンドルサイズ** | 2KB コア        | ~3KB            | ~16KB           | ~22KB           |
 
 ---
 
-## 🚀 クイックスタート
+## コア機能の詳細
 
-### インストール
+### 1️⃣ スマートな計算プロパティ (`@memo`)
 
-```bash
-npm install @do-md/zenith immer
-# または
-pnpm add @do-md/zenith immer
+無駄なレンダリングを拒否します。Zenithの `@memo` はMobXの `computed` に似ていますが、完全に不変データに基づいています。
+
+- **チェーン派生**：計算プロパティは他の計算プロパティに依存でき、効率的なデータフローグラフを構築します。
+- **正確な更新**：計算結果の参照（Reference Equality）が変わらない場合、コンポーネントは再レンダリングされません。
+- **明示的な依存**：`@memo((s) => [deps])` により、データフローが明確になり、MobXのような「魔法」のブラックボックスを回避できます。
+
+### 2️⃣ 強制的なカプセル化 (Force Encapsulation)
+
+チーム開発において、状態管理で最も恐れられるのは「無秩序な変更」です。Zustandではコンポーネント内のどこでも `setState` が可能で、ビジネスロジックが分散してしまいます。
+
+**ZenithはロジックをStore内部に書くことを強制します：**
+
+```typescript
+// ✅ Good: UIは意図を呼び出すだけ
+<button onClick={() => store.submitOrder(items)} />
+
+// ❌ Bad: UIはStateを直接変更できない（setStateメソッドが公開されていない）
+// store.state.orders = ... // Error!
 ```
 
-> **注意**：Immer は peer dependency であり、明示的にインストールする必要があります
+これにより、**リファクタリングが極めて簡単**になり（Refactor-friendly）、参照の検索（Find Usages）が常に正確になります。
 
-### TypeScript デコレータを有効化
+### 3️⃣ 組み込みミドルウェアアーキテクチャ
+
+コアはわずか ~3.5KB ですが、機能は無限に拡張可能です。
+
+- **📦 withHistory**：Patchesに基づいたUndo/Redo。スナップショット方式と比較してメモリ使用量が **1/100** で、エディタやキャンバスアプリ向けに設計されています。
+  - [📖 History ミドルウェア ドキュメント](./docs/middleware-history.ja.md)
+- **🛠️ DevTools**：設定不要でRedux DevToolsに接続し、タイムトラベルデバッグをサポートします。
+  - [📖 DevTools ミドルウェア ドキュメント](./docs/middleware-devtools.ja.md)
+
+---
+
+## 📊 比較
+
+| 機能 | Zenith | Zustand | MobX | Redux Toolkit |
+| :--- | :--- | :--- | :--- | :--- |
+| **コアパラダイム** | **Immutable Class** | Functional | Mutable Class | Functional |
+| **計算プロパティ** | ✅ **@memo (Chain)** | ❌ (手動) | ✅ computed | ⚠️ selector |
+| **APIのシンプルさ** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+| **型安全性** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **チーム標準化** | ✅ **強制カプセル化** | ❌ 弱い | ⚠️ 弱い | ✅ 強い |
+| **Undo/Redo** | ✅ **Patches (高速)** | ❌ | ❌ | ⚠️ 重い |
+| **バンドルサイズ** | **~3.5KB** | ~1KB | ~16KB | ~20KB+ |
+
+---
+
+## 📖 その他のドキュメント
+
+- **[📚 完全なAPIドキュメント](./docs/api.ja.md)**
+- **[Todo App 完全な例](./docs/todo-app.ja.md)**
+
+---
+
+## 📦 インストール
+
+Zenithは不変データの処理に `immer` を使用します。
+
+```bash
+# npm
+npm install @do-md/zenith immer
+
+# pnpm
+pnpm add @do-md/zenith immer
+
+# yarn
+yarn add @do-md/zenith immer
+```
+
+デコレータをサポートするために `tsconfig.json` を設定します：
 
 ```json
-// tsconfig.json
 {
   "compilerOptions": {
     "experimentalDecorators": true,
@@ -247,61 +203,17 @@ pnpm add @do-md/zenith immer
 }
 ```
 
-## 🔌 Middleware アーキテクチャ
-
-Zenith は Middleware アーキテクチャを採用し、軽量なコア（2KB）で、機能をオンデマンドで読み込みます：
-
-### コア Middleware
-
-#### 📦 withHistory - アンドゥ/リドゥ
-
-> **Zenith のコア機能**：Core から分離されていますが、最も重要な機能の1つです
-
-Immer Patches に基づき、メモリ効率が100倍：
-
-**特徴：**
-
-- ✅ メモリ使用量はスナップショット方式の1%
-- ✅ スマートデバウンスマージ
-- ✅ 精密な粒度制御
-- ✅ エディタ、キャンバスなどに適している
-
-**[📖 完全なドキュメント](./docs/middleware-history.ja.md)**
-
-#### 🛠️ devtools - Redux DevTools 統合
-
-開発環境で Store をデバッグ：
-
-**特徴：**
-
-- ✅ アクショントラッキング
-- ✅ タイムトラベル
-- ✅ ステートのエクスポート/インポート
-- ✅ ゼロ設定
-
-**[📖 完全なドキュメント](./docs/middleware-devtools.ja.md)**
-
-## 📖 ドキュメントと例
-
-**[📚 完全な API ドキュメント](./docs/api.ja.md)** · **[Todo App の完全な例](./docs/todo-app.ja.md)**
-
 ---
 
-## 🎯 実世界の例：domd
+## 🎯 実際の使用例
 
-**[domd](https://demo.domd.app/?src=https://github.com/do-md/zenith)** — Zenith で構築された強力な WYSIWYG Markdown エディタ
-
-- 📦 **20KB、フル機能** — Immer + Zenith のみに依存、完全な Markdown パースと編集機能
-- 🚀 **20000+ 行のスムーズな編集** — ラグなし、遅延なし、優れたパフォーマンス
-- 💾 **極めて低いメモリ使用量** — 安定した参照 + Immer Patches の完璧な実践
-- 🔜 **オープンソース予定**
+**[domd](https://demo.domd.app/?src=https://github.com/do-md/zenith)** — Zenithで構築された強力なWYSIWYG Markdownエディタ。
+- ⚡️ **パフォーマンス**：20,000行以上のドキュメントをスムーズに処理。
+- 🔙 **Undo**：Zenith Historyミドルウェアに基づく正確なUndo/Redo。
+- 💾 **メモリ**：Immer Patchesによりメモリオーバーヘッドを劇的に削減。
 
 ---
 
 ## 📄 ライセンス
 
 MIT © [Jayden Wang](https://github.com/do-md)
-
-## 💡 謝辞
-
-Zenith は **[Immer](https://github.com/immerjs/immer)** の上に構築されています — [Michel Weststrate](https://github.com/mweststrate) によって作成された優れたライブラリで、イミュータブルな状態更新を自然でエレガントにします。
