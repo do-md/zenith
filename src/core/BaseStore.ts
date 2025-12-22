@@ -1,4 +1,4 @@
-import { produce, enablePatches, applyPatches, Patch } from 'immer';
+import { produce, applyPatches, Patch } from 'immer';
 import { StoreOptions } from '../type';
 
 export class BaseStore<T extends object> {
@@ -9,21 +9,12 @@ export class BaseStore<T extends object> {
     // ===== Subscribers =====
     private _listeners = new Set<(newState: T, prevState: T) => void>();
 
-    private enablePatch: boolean;
 
 
     constructor(
-        initState: T,
-        {
-            enablePatch = false,
-        }: StoreOptions = {}) {
+        initState: T,) {
         this._state = initState;
         this._initialState = initState;
-        this.enablePatch = enablePatch;
-
-        if (enablePatch) {
-            enablePatches();
-        }
     }
 
 
@@ -51,16 +42,16 @@ export class BaseStore<T extends object> {
     ) {
         const { patchCallback } = options || {};
         const prevState = this._state;
-        const handlePatches = this.enablePatch ? (patches: Patch[], inversePatches: Patch[]) => {
-            patchCallback?.(patches, inversePatches);
-        } : undefined;
-        const newState = produce(this._state, fn, handlePatches);
+        const newState = produce(this._state, fn, patchCallback);
         this._state = newState;
         this._listeners.forEach((listener) => listener(newState, prevState));
     }
 
     public applyPatches(patches: Patch[]) {
-        this._state = applyPatches(this._state, patches) as T;
+        const prevState = this._state;
+        const newState = applyPatches(this._state, patches) as T;
+        this._state = newState;
+        this._listeners.forEach((listener) => listener(newState, prevState));
     }
 }
 

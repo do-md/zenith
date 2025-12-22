@@ -1,6 +1,6 @@
 // core
 export { BaseStore as ZenithStore } from './core/BaseStore';
-export { memo } from './core/memo';
+export { memo, createMemo } from './core/memo';
 export { addEffect } from './core/effect';
 
 // React

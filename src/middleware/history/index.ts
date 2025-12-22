@@ -24,6 +24,7 @@ export function withHistory<T extends object>(store: BaseStore<T>, options: Hist
     debounceTime: 100
 }) {
     enablePatches();
+    const originalProduce = store.produce.bind(store);
     const historyState: HistoryState = {
         list: [],
         cursor: 0,
@@ -111,7 +112,7 @@ export function withHistory<T extends object>(store: BaseStore<T>, options: Hist
             actionName?: string;
         }
     ) => {
-        store.produce(fn, {
+        originalProduce(fn, {
             actionName: options?.actionName,
             patchCallback: (patches, inversePatches) => {
                 const { preventPatches } = historyState;
@@ -123,11 +124,12 @@ export function withHistory<T extends object>(store: BaseStore<T>, options: Hist
         });
     }
 
+    store.produce = produce;
+
     return {
         undo,
         redo,
         updateKeepRecord,
-        produce,
     }
 }
 

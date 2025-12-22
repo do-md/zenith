@@ -15,13 +15,13 @@ class EditorStore extends ZenithStore<EditorState> {
   constructor() {
     super({ content: "" }, { enablePatch: true });
 
-    const history = withHistory(this, {
+    const { undo, redo } = withHistory(this, {
       maxLength: 50,
       debounceTime: 100,
     });
 
-    this.undo = history.undo;
-    this.redo = history.redo;
+    this.undo = undo;
+    this.redo = redo;
   }
 
   insertText(text: string) {
@@ -78,9 +78,10 @@ interface HistoryMethods {
   undo: () => void;
   redo: () => void;
   updateKeepRecord: (keep: boolean) => void;
-  produce: (fn, options) => void;
 }
 ```
+
+**注意：** `withHistory` は `store.produce` を拡張し、履歴オプション（`disableRecord` など）をサポートします。
 
 ## スマート履歴マージ
 
@@ -93,11 +94,11 @@ class EditorStore extends ZenithStore<EditorState> {
   constructor() {
     super({ content: "" }, { enablePatch: true });
     
-    const history = withHistory(this, {
+    const { undo } = withHistory(this, {
       debounceTime: 100,
     });
     
-    this.undo = history.undo;
+    this.undo = undo;
   }
 
   insertChar(char: string) {

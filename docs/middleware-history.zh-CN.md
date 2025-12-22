@@ -25,13 +25,13 @@ class EditorStore extends ZenithStore<EditorState> {
     super({ content: "" }, { enablePatch: true }); // 必须启用 Patches
 
     // 添加历史记录能力
-    const history = withHistory(this, {
+    const { undo, redo } = withHistory(this, {
       maxLength: 50,      // 最大历史长度
       debounceTime: 100,  // 防抖时间（ms）
     });
 
-    this.undo = history.undo;
-    this.redo = history.redo;
+    this.undo = undo;
+    this.redo = redo;
   }
 
   insertText(text: string) {
@@ -81,9 +81,10 @@ interface HistoryMethods {
   undo: () => void;                           // 撤销
   redo: () => void;                           // 重做
   updateKeepRecord: (keep: boolean) => void;  // 控制历史合并
-  produce: (fn, options) => void;             // 替代原 produce 方法
 }
 ```
+
+**注意：** `withHistory` 会增强 `store.produce` 方法，使其支持历史记录选项（如 `disableRecord`）。
 
 ## 核心原理：Immer Patches
 
@@ -148,11 +149,11 @@ class EditorStore extends ZenithStore<EditorState> {
   constructor() {
     super({ content: "" }, { enablePatch: true });
     
-    const history = withHistory(this, {
+    const { undo } = withHistory(this, {
       debounceTime: 100, // 100ms 内的操作合并
     });
     
-    this.undo = history.undo;
+    this.undo = undo;
   }
 
   insertChar(char: string) {
@@ -228,14 +229,14 @@ class TodoStore extends ZenithStore<TodoState> {
   }
 
   addTodo(text: string) {
-    this.history.produce((state) => {
+    this.produce((state) => {
       state.todos.push({ text, completed: false });
     });
   }
 
   // UI 状态变化不记录历史
   setUIState(expanded: boolean) {
-    this.history.produce(
+    this.produce(
       (state) => {
         state.ui.expanded = expanded;
       },
@@ -308,12 +309,12 @@ class TextEditorStore extends ZenithStore<EditorState> {
   constructor() {
     super({ content: "", cursor: 0 }, { enablePatch: true });
     
-    const history = withHistory(this, {
+    const { undo, redo } = withHistory(this, {
       debounceTime: 300, // 输入时更长的防抖
     });
     
-    this.undo = history.undo;
-    this.redo = history.redo;
+    this.undo = undo;
+    this.redo = redo;
   }
 
   insertText(text: string) {
@@ -348,7 +349,7 @@ class FormStore extends ZenithStore<FormState> {
   }
 
   updateField(name: string, value: any) {
-    this.history.produce((state) => {
+    this.produce((state) => {
       state.fields[name] = value;
     });
   }
@@ -380,7 +381,7 @@ class DrawingStore extends ZenithStore<DrawingState> {
 
   // 单次操作（如添加形状）
   addShape(shape: Shape) {
-    this.history.produce((state) => {
+    this.produce((state) => {
       state.shapes.push(shape);
     });
   }
@@ -391,7 +392,7 @@ class DrawingStore extends ZenithStore<DrawingState> {
   }
 
   drawPoint(point: Point) {
-    this.history.produce((state) => {
+    this.produce((state) => {
       state.currentPath.push(point);
     });
   }

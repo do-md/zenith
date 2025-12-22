@@ -11,7 +11,7 @@ export default defineConfig({
     }),
   ],
   build: {
-    sourcemap: true,
+    sourcemap: false,
     lib: {
       entry: {
         index: resolve(__dirname, 'src/index.ts'),
@@ -30,7 +30,6 @@ export default defineConfig({
         },
       },
     },
-    sourcemap: false,
     minify: 'esbuild',
   },
 });

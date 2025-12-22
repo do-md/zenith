@@ -15,13 +15,13 @@ class EditorStore extends ZenithStore<EditorState> {
   constructor() {
     super({ content: "" }, { enablePatch: true });
 
-    const history = withHistory(this, {
+    const { undo, redo } = withHistory(this, {
       maxLength: 50,
       debounceTime: 100,
     });
 
-    this.undo = history.undo;
-    this.redo = history.redo;
+    this.undo = undo;
+    this.redo = redo;
   }
 
   insertText(text: string) {
@@ -78,9 +78,10 @@ interface HistoryMethods {
   undo: () => void;
   redo: () => void;
   updateKeepRecord: (keep: boolean) => void;
-  produce: (fn, options) => void;
 }
 ```
+
+**Note:** `withHistory` enhances `store.produce` to support history options (like `disableRecord`).
 
 ## Smart History Merging
 
@@ -93,11 +94,11 @@ class EditorStore extends ZenithStore<EditorState> {
   constructor() {
     super({ content: "" }, { enablePatch: true });
     
-    const history = withHistory(this, {
+    const { undo } = withHistory(this, {
       debounceTime: 100,
     });
     
-    this.undo = history.undo;
+    this.undo = undo;
   }
 
   insertChar(char: string) {
@@ -153,12 +154,12 @@ class TextEditorStore extends ZenithStore<EditorState> {
   constructor() {
     super({ content: "", cursor: 0 }, { enablePatch: true });
     
-    const history = withHistory(this, {
+    const { undo, redo } = withHistory(this, {
       debounceTime: 300,
     });
     
-    this.undo = history.undo;
-    this.redo = history.redo;
+    this.undo = undo;
+    this.redo = redo;
   }
 
   insertText(text: string) {
