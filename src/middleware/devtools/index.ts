@@ -3,7 +3,23 @@ import { Patch } from 'immer';
 
 // Redux DevTools Extension interface
 interface ReduxDevtoolsExtension {
-    connect(options?: DevtoolsOptions): ReduxDevtoolsConnection;
+    connect(options?: ReduxDevtoolsOptions): ReduxDevtoolsConnection;
+}
+
+interface ReduxDevtoolsOptions {
+    name?: string;
+    instanceId?: string;
+    features?: {
+        pause?: boolean;
+        lock?: boolean;
+        persist?: boolean;
+        export?: boolean;
+        import?: string;
+        jump?: boolean;
+        skip?: boolean;
+        reorder?: boolean;
+        dispatch?: boolean;
+    };
 }
 
 interface ReduxDevtoolsConnection {
@@ -72,8 +88,11 @@ export function devtools<T extends object>(
         return () => {};
     }
 
+    const storeName = options.name || store.constructor.name;
+    
     const connection = extension.connect({
-        name: options.name || store.constructor.name,
+        name: storeName,
+        instanceId: storeName,  // Explicitly set instanceId to ensure proper display
         features: {
             pause: true,
             lock: true,
@@ -88,8 +107,14 @@ export function devtools<T extends object>(
         }
     });
 
-    // Initialize with current state
+    // Initialize DevTools with current state
     connection.init(store.state);
+    
+    // Send initial action to ensure store is properly registered
+    connection.send(
+        { type: `@@INIT [${storeName}]` },
+        store.state
+    );
 
     // Intercept produce method to send updates to DevTools
     const originalProduce = store.produce.bind(store);

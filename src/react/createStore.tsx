@@ -2,11 +2,15 @@ import { createContext, useContext, useState } from "react";
 import { BaseStore } from "../core/BaseStore";
 import { useStoreSelector } from "./useStoreSelector";
 
-type ConstructorParameters<T> = T extends new (props: infer P) => any ? P : never;
+type ConstructorParameters<T> = T extends new () => any 
+    ? undefined 
+    : T extends new (props: infer P) => any 
+        ? P 
+        : never;
 
 type InstanceType<T> = T extends new (...args: any[]) => infer R ? R : never;
 
-export function createReactStore<TStoreConstructor extends new (props: any) => BaseStore<any>>(
+export function createReactStore<TStoreConstructor extends new (...args: any[]) => BaseStore<any>>(
     StoreClass: TStoreConstructor
 ) {
     type TStore = InstanceType<TStoreConstructor>
@@ -14,8 +18,12 @@ export function createReactStore<TStoreConstructor extends new (props: any) => B
 
     const StoreContext = createContext<TStore | null>(null)
 
-    const StoreProvider = ({ children, initialProps }: { children: React.ReactNode, initialProps: TProps }) => {
-        const [store] = useState<TStore>(() => new StoreClass(initialProps) as TStore)
+    type StoreProviderProps = TProps extends undefined
+        ? { children: React.ReactNode; initialProps?: undefined }
+        : { children: React.ReactNode; initialProps: TProps }
+
+    const StoreProvider = ({ children, initialProps }: StoreProviderProps) => {
+        const [store] = useState<TStore>(() => new StoreClass(initialProps as TProps) as TStore)
         return <StoreContext.Provider value={store}> {children} </StoreContext.Provider>
     }
 
