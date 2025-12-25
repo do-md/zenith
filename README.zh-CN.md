@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Powered by Immer](https://img.shields.io/badge/Powered%20by-Immer-00D8FF?style=flat-square)](https://immerjs.github.io/immer/)
-[![Gzipped Size](https://img.shields.io/badge/minzipped-3.5kb-success?style=flat-square)](https://bundlephobia.com/package/@do-md/zenith)
+[![Gzipped Size](https://img.shields.io/badge/minzipped-1kb-success?style=flat-square)](https://bundlephobia.com/package/@do-md/zenith)
 
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md)
 
@@ -145,9 +145,40 @@ function TodoList() {
 
 这使得**重构变得极其简单**（Refactor-friendly），查找引用（Find Usages）永远准确。
 
-### 3️⃣ 内置中间件架构
+### 3️⃣ 灵活的生命周期管理 (`StoreProvider`)
 
-核心仅 2KB，但功能无限扩展。
+**拒绝状态污染，支持组件级状态隔离。**
+
+`StoreProvider` 赋予 Store 完整的 React 生命周期控制能力：
+
+- **🔄 组件级隔离**：每个 `<StoreProvider>` 创建独立的 Store 实例，不同组件树之间状态完全隔离。
+- **♻️ 自动清理**：组件卸载时 Store 自动销毁，避免内存泄漏。
+- **🧩 可复用组件**：同一个 Store 可在多处使用，每个实例拥有独立状态，天然支持模块化。
+
+```tsx
+// ✅ 推荐：通过 Provider 控制生命周期
+function App() {
+  return (
+    <>
+      <StoreProvider>
+        <TodoList /> {/* 独立的 Store 实例 A */}
+      </StoreProvider>
+      <StoreProvider>
+        <TodoList /> {/* 独立的 Store 实例 B */}
+      </StoreProvider>
+    </>
+  );
+}
+
+// ⚠️ 也支持全局 Store，但不推荐（失去生命周期管理优势）
+const globalStore = new TodoStore();
+```
+
+**推荐始终使用 `StoreProvider`**，即使是全局状态场景，也能获得更好的可测试性和组件隔离性。
+
+### 4️⃣ 内置中间件架构
+
+核心仅 1KB，但功能无限扩展。
 
 - **📦 withHistory**：基于 Patches 的撤销/重做。内存占用比快照方案低 **100倍**，专为编辑器/画板设计。
   - [📖 History 中间件文档](./docs/middleware-history.zh-CN.md)
@@ -166,7 +197,7 @@ function TodoList() {
 | **类型安全** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | **团队规范性** | ✅ **强制封装** | ❌ 弱约束 | ⚠️ 弱约束 | ✅ 强约束 |
 | **撤销/重做** | ✅ **Patches (极快)** | ❌ | ❌ | ⚠️ 较重 |
-| **包体积** | **~3.5KB** | ~1KB | ~16KB | ~20KB+ |
+| **包体积** | **~1KB** | ~1KB | ~16KB | ~20KB+ |
 
 ---
 

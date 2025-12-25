@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Powered by Immer](https://img.shields.io/badge/Powered%20by-Immer-00D8FF?style=flat-square)](https://immerjs.github.io/immer/)
-[![Gzipped Size](https://img.shields.io/badge/minzipped-3.5kb-success?style=flat-square)](https://bundlephobia.com/package/@do-md/zenith)
+[![Gzipped Size](https://img.shields.io/badge/minzipped-1kb-success?style=flat-square)](https://bundlephobia.com/package/@do-md/zenith)
 
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md)
 
@@ -145,9 +145,40 @@ In team collaboration, the biggest fear in state management is "arbitrary modifi
 
 This makes **refactoring extremely simple** (Refactor-friendly), and Find Usages is always accurate.
 
-### 3️⃣ Built-in Middleware Architecture
+### 3️⃣ Flexible Lifecycle Management (`StoreProvider`)
 
-Core is only ~3.5KB, but functionality is infinitely extensible.
+**Reject state pollution, support component-level state isolation.**
+
+`StoreProvider` grants Store complete control over React lifecycle:
+
+- **🔄 Component-level Isolation**: Each `<StoreProvider>` creates an independent Store instance with completely isolated state between different component trees.
+- **♻️ Automatic Cleanup**: Store is automatically destroyed when the component unmounts, preventing memory leaks.
+- **🧩 Reusable Components**: The same Store can be used in multiple places, each instance having independent state, naturally supporting modularity.
+
+```tsx
+// ✅ Recommended: Control lifecycle via Provider
+function App() {
+  return (
+    <>
+      <StoreProvider>
+        <TodoList /> {/* Independent Store instance A */}
+      </StoreProvider>
+      <StoreProvider>
+        <TodoList /> {/* Independent Store instance B */}
+      </StoreProvider>
+    </>
+  );
+}
+
+// ⚠️ Global Store also supported, but not recommended (loses lifecycle management benefits)
+const globalStore = new TodoStore();
+```
+
+**Always use `StoreProvider` is recommended**, even for global state scenarios, you'll gain better testability and component isolation.
+
+### 4️⃣ Built-in Middleware Architecture
+
+Core is only ~1KB, but functionality is infinitely extensible.
 
 - **📦 withHistory**: Undo/Redo based on Patches. Memory usage is **100x lower** than snapshot solutions, designed for editors/canvases.
   - [📖 History Middleware Docs](./docs/middleware-history.en.md)
@@ -166,7 +197,7 @@ Core is only ~3.5KB, but functionality is infinitely extensible.
 | **Type Safety** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | **Team Standard** | ✅ **Force Encapsulation** | ❌ Weak | ⚠️ Weak | ✅ Strong |
 | **Undo/Redo** | ✅ **Patches (Fast)** | ❌ | ❌ | ⚠️ Heavy |
-| **Bundle Size** | **~3.5KB** | ~1KB | ~16KB | ~20KB+ |
+| **Bundle Size** | **~1KB** | ~1KB | ~16KB | ~20KB+ |
 
 ---
 

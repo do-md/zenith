@@ -1,8 +1,9 @@
 {
   "name": "@do-md/zenith",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Engineering-grade React state management powered by Immer",
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
