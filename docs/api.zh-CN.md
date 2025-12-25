@@ -260,76 +260,6 @@ class CanvasStore extends ZenithStore<State> {
 
 ---
 
-### withQuery
-
-添加异步查询能力。
-
-```typescript
-import { withQuery, APIState } from "@do-md/zenith/middleware";
-
-const { query, invalidate } = withQuery(store);
-```
-
-**返回值：**
-
-```typescript
-{
-  query: <TData>(
-    service: () => Promise<TData>,
-    options: {
-      key: string;
-      enabled?: (self: Store) => boolean;
-      deps?: (self: Store) => any[];
-    }
-  ) => APIState<TData>;
-
-  invalidate: (key: string) => void;
-}
-```
-
-**APIState 类型：**
-
-```typescript
-interface APIState<TData = any> {
-  state: FetcherState; // Idle | Pending | Success | Error
-  data: TData | undefined;
-  error: any;
-}
-```
-
-**示例：**
-
-```typescript
-class UserStore extends ZenithStore<State> {
-  private query: ReturnType<typeof withQuery>["query"];
-
-  constructor() {
-    super(initialState);
-    const queryHelper = withQuery(this);
-    this.query = queryHelper.query;
-  }
-
-  @memo((self) => [self.state.userId])
-  get userData() {
-    return this.query(() => fetchUser(this.state.userId), {
-      key: "user",
-      deps: (s) => [s.state.userId],
-      enabled: (s) => !!s.state.userId,
-    });
-  }
-}
-
-function UserProfile() {
-  const userData = useStore((s) => s.userData);
-
-  if (userData.state === "Pending") return <div>Loading...</div>;
-  if (userData.state === "Error") return <div>Error: {userData.error}</div>;
-  return <div>{userData.data?.name}</div>;
-}
-```
-
----
-
 ### devtools
 
 集成 Redux DevTools。
@@ -563,4 +493,3 @@ class TodoStore extends ZenithStore<{ todos: Todo[] }> {
   }
 }
 ```
-

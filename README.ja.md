@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue?style=flat-square)](https://www.typescriptlang.org/)
 [![Powered by Immer](https://img.shields.io/badge/Powered%20by-Immer-00D8FF?style=flat-square)](https://immerjs.github.io/immer/)
-[![Gzipped Size](https://img.shields.io/badge/minzipped-3.5kb-success?style=flat-square)](https://bundlephobia.com/package/@do-md/zenith)
+[![Gzipped Size](https://img.shields.io/badge/minzipped-1kb-success?style=flat-square)](https://bundlephobia.com/package/@do-md/zenith)
 
 [English](./README.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md)
 
@@ -145,9 +145,40 @@ function TodoList() {
 
 これにより、**リファクタリングが極めて簡単**になり（Refactor-friendly）、参照の検索（Find Usages）が常に正確になります。
 
-### 3️⃣ 組み込みミドルウェアアーキテクチャ
+### 3️⃣ 柔軟なライフサイクル管理 (`StoreProvider`)
 
-コアはわずか ~3.5KB ですが、機能は無限に拡張可能です。
+**状態汚染を拒否し、コンポーネントレベルの状態分離をサポート。**
+
+`StoreProvider` は Store に完全な React ライフサイクル制御機能を付与します：
+
+- **🔄 コンポーネントレベルの分離**：各 `<StoreProvider>` は独立した Store インスタンスを作成し、異なるコンポーネントツリー間で状態が完全に分離されます。
+- **♻️ 自動クリーンアップ**：コンポーネントがアンマウントされると Store が自動的に破棄され、メモリリークを防ぎます。
+- **🧩 再利用可能なコンポーネント**：同じ Store を複数の場所で使用でき、各インスタンスが独立した状態を持ち、モジュール化を自然にサポートします。
+
+```tsx
+// ✅ 推奨：Provider でライフサイクルを制御
+function App() {
+  return (
+    <>
+      <StoreProvider>
+        <TodoList /> {/* 独立した Store インスタンス A */}
+      </StoreProvider>
+      <StoreProvider>
+        <TodoList /> {/* 独立した Store インスタンス B */}
+      </StoreProvider>
+    </>
+  );
+}
+
+// ⚠️ グローバル Store もサポートされていますが、推奨されません（ライフサイクル管理の利点を失います）
+const globalStore = new TodoStore();
+```
+
+**常に `StoreProvider` の使用を推奨します**。グローバル状態のシナリオでも、より良いテスト可能性とコンポーネント分離を得られます。
+
+### 4️⃣ 組み込みミドルウェアアーキテクチャ
+
+コアはわずか ~1KB ですが、機能は無限に拡張可能です。
 
 - **📦 withHistory**：Patchesに基づいたUndo/Redo。スナップショット方式と比較してメモリ使用量が **1/100** で、エディタやキャンバスアプリ向けに設計されています。
   - [📖 History ミドルウェア ドキュメント](./docs/middleware-history.ja.md)
@@ -166,7 +197,7 @@ function TodoList() {
 | **型安全性** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
 | **チーム標準化** | ✅ **強制カプセル化** | ❌ 弱い | ⚠️ 弱い | ✅ 強い |
 | **Undo/Redo** | ✅ **Patches (高速)** | ❌ | ❌ | ⚠️ 重い |
-| **バンドルサイズ** | **~3.5KB** | ~1KB | ~16KB | ~20KB+ |
+| **バンドルサイズ** | **~1KB** | ~1KB | ~16KB | ~20KB+ |
 
 ---
 

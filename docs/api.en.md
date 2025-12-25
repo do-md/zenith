@@ -231,68 +231,6 @@ class EditorStore extends ZenithStore<EditorState> {
 
 ---
 
-### withQuery
-
-Add async query capability.
-
-```typescript
-import { withQuery, APIState } from "@do-md/zenith/middleware";
-
-const { query, invalidate } = withQuery(store);
-```
-
-**Returns:**
-
-```typescript
-{
-  query: <TData>(
-    service: () => Promise<TData>,
-    options: {
-      key: string;
-      enabled?: (self: Store) => boolean;
-      deps?: (self: Store) => any[];
-    }
-  ) => APIState<TData>;
-
-  invalidate: (key: string) => void;
-}
-```
-
-**APIState Type:**
-
-```typescript
-interface APIState<TData = any> {
-  state: FetcherState; // "Idle" | "Pending" | "Success" | "Error"
-  data: TData | undefined;
-  error: any;
-}
-```
-
-**Example:**
-
-```typescript
-class UserStore extends ZenithStore<State> {
-  private query: ReturnType<typeof withQuery>["query"];
-
-  constructor() {
-    super(initialState);
-    const queryHelper = withQuery(this);
-    this.query = queryHelper.query;
-  }
-
-  @memo((self) => [self.state.userId])
-  get userData() {
-    return this.query(() => fetchUser(this.state.userId), {
-      key: "user",
-      deps: (s) => [s.state.userId],
-      enabled: (s) => !!s.state.userId,
-    });
-  }
-}
-```
-
----
-
 ### devtools
 
 Integrate with Redux DevTools.
@@ -451,7 +389,6 @@ class MyStore extends ZenithStore<State> {
     super(initialState, { enablePatch: true });
 
     const history = withHistory(this);
-    const query = withQuery(this);
     devtools(this, { name: "MyStore" });
 
     this.undo = history.undo;
@@ -515,4 +452,3 @@ class TodoStore extends ZenithStore<{ todos: Todo[] }> {
   }
 }
 ```
-

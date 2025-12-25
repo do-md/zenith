@@ -3,7 +3,6 @@ import { BaseStore } from "./BaseStore";
 type MemoCacheEntry = {
   value: any;
   deps: any[];
-  refCount: number;
 };
 
 // Modified cache structure: use store + propertyName as key
@@ -29,9 +28,13 @@ export function createMemo<T extends BaseStore<any>>() {
  * ```
  */
 export function memo<T extends BaseStore<any>>(getDeps: (self: T) => any[]) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor): void {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor,
+  ): void {
     const originalGetter = descriptor.get;
-    if (!originalGetter) throw new Error('@memo can only be used on getters');
+    if (!originalGetter) throw new Error("@memo can only be used on getters");
 
     descriptor.get = function () {
       const store = this as T;
@@ -56,55 +59,9 @@ export function memo<T extends BaseStore<any>>(getDeps: (self: T) => any[]) {
       storeMap.set(propertyKey, {
         value,
         deps: [...deps],
-        refCount: cacheEntry?.refCount ?? 0,
       });
 
       return value;
     };
-
   };
 }
-
-export function trackGetterAccess(store: object, propertyName: string) {
-  const storeMap = memoCache.get(store);
-
-  const entry = storeMap?.get(propertyName);
-  if (entry) {
-    entry.refCount++;
-  }
-}
-
-export function untrackGetterAccess(store: object, propertyName: string) {
-  const storeMap = memoCache.get(store);
-  const entry = storeMap?.get(propertyName);
-  if (entry) {
-    entry.refCount--;
-    if (entry.refCount <= 0) {
-      storeMap?.delete(propertyName);
-    }
-  }
-}
-
-// Helper function to get property name
-export function getPropertyName<S extends BaseStore<any>>(
-  store: S,
-  getter: (store: S) => unknown
-): string | null {
-  let accessedKey: string | null = null;
-
-  const proxy = new Proxy({}, {
-    get(_, key: string) {
-      accessedKey = key;
-      return store[key as keyof typeof store];
-    },
-  }) as S;
-
-  try {
-    getter(proxy);
-  } catch {
-    // Ignore exceptions, only used for access
-  }
-
-  return accessedKey;
-}
-

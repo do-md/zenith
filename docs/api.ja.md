@@ -178,28 +178,6 @@ interface HistoryOptions {
 
 ---
 
-### withQuery
-
-非同期クエリ機能を追加。
-
-```typescript
-import { withQuery, APIState } from "@do-md/zenith/middleware";
-
-const { query, invalidate } = withQuery(store);
-```
-
-**APIState 型：**
-
-```typescript
-interface APIState<TData = any> {
-  state: FetcherState; // "Idle" | "Pending" | "Success" | "Error"
-  data: TData | undefined;
-  error: any;
-}
-```
-
----
-
 ### devtools
 
 Redux DevTools と統合。
@@ -256,7 +234,6 @@ class MyStore extends ZenithStore<State> {
     super(initialState, { enablePatch: true });
 
     const history = withHistory(this);
-    const query = withQuery(this);
     devtools(this, { name: "MyStore" });
 
     this.undo = history.undo;
@@ -320,4 +297,3 @@ class TodoStore extends ZenithStore<{ todos: Todo[] }> {
   }
 }
 ```
-
