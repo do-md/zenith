@@ -39,7 +39,10 @@ export class BaseStore<T extends object> {
     const prevState = this._state;
     const newState = produce(this._state, fn, patchCallback);
     this._state = newState;
-    this._listeners.forEach((listener) => listener(newState, prevState));
+    // 只在 state 实际变化时通知 listeners（Immer 空 recipe 返回同引用）
+    if (newState !== prevState) {
+      this._listeners.forEach((listener) => listener(newState, prevState));
+    }
   }
 
   public applyPatches(patches: Patch[]) {
